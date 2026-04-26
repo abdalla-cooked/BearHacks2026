@@ -1,5 +1,4 @@
 import os
-import sys
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import file_ops
@@ -141,9 +140,9 @@ class FileExplorerApp:
         self.root.bind("<Shift-Tab>", self._on_shift_tab)
         self.root.bind("<Return>", self._on_enter)
 
+        self.ai_queue = queue.Queue()
+        self.check_ai_queue()
         self.navigate(self.current_path, push=False)
-        self.ai_queue = queue.Queue() # Creating mailbox for AI messages
-        self.check_ai_queue() # Checking mailbox
 
     # ── TTK styles ────────────────────────────────────────────────────────────
     def _styles(self):
@@ -278,7 +277,7 @@ class FileExplorerApp:
 
     # ── Grid ──────────────────────────────────────────────────────────────────
     def _refresh(self):
-        for t in self._tiles: t.destroy()
+        for w in self.grid_frame.winfo_children(): w.destroy()
         self._tiles    = []
         self.sel_tile  = None
         self.sel_path  = None
@@ -428,18 +427,18 @@ class FileExplorerApp:
                 self._refresh()
             except Exception as e:
                 messagebox.showerror("Error", str(e))
-    def execute_ai_action(self, gesture_label, target_path=None):
+    def execute_ai_action(self, gesture_label):
         if gesture_label == "GESTURE_CREATE":
-            # Example: AI gesture triggers the create_file logic
-            self.create_file()  # Calls your existing method in app.py
-            
+            self.create_file()
         elif gesture_label == "GESTURE_DELETE":
-            # AI gesture triggers the delete logic for the selected item
             self.delete_item()
-            
         elif gesture_label == "GESTURE_RENAME":
-            # AI gesture triggers the rename prompt
             self.rename_item()
+        elif gesture_label == "GESTURE_OPEN":
+            if self.sel_tile:
+                self._dbl(self.sel_tile)
+        elif gesture_label == "GESTURE_BACK":
+            self.go_back()
     def check_ai_queue(self):
         # checks queue every 100 ms
         try:
